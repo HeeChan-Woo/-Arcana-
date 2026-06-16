@@ -23,6 +23,7 @@ const cosmic = {
   danger: 'oklch(0.65 0.18 27)',
 };
 
+// Augment mock readings with card data for display
 function enrichReading(r: Reading): Reading {
   if (r.cards.length > 0) return r;
   const seed = parseInt(r.id.replace(/\D/g, ''), 10) || 0;
@@ -73,7 +74,7 @@ function getAuthErrorMessage(error: unknown): string {
   }
 
   if (message.includes('email not confirmed')) {
-    return '이메일 인증이 아직 완료되지 않았습니다. 메일함에서 인증을 먼저 완료해주세요.';
+    return '이메일 인증이 아직 완료되지 않았습니다. 인증을 먼저 확인해주세요.';
   }
 
   if (message.includes('too many requests') || message.includes('rate limit')) {
@@ -81,7 +82,7 @@ function getAuthErrorMessage(error: unknown): string {
   }
 
   if (message.includes('user already registered') || message.includes('already registered')) {
-    return '이미 가입된 이메일입니다. 로그인으로 접속해주세요.';
+    return '이미 가입된 이메일입니다. 로그인으로 해주세요.';
   }
 
   return error.message || '인증에 실패했습니다. 다시 시도해주세요.';
@@ -288,7 +289,7 @@ export function DashboardPage() {
               </p>
             </div>
             <button
-              onClick={handleStartNewReading}
+              onClick={() => navigate('/reading')}
               style={{
                 padding: '12px 24px',
                 background: 'linear-gradient(135deg, oklch(0.74 0.135 82), oklch(0.65 0.15 75))',
@@ -303,90 +304,6 @@ export function DashboardPage() {
             </button>
           </div>
         </div>
-
-        {questionPanelOpen && (
-          <div style={{
-            background: cosmic.panel,
-            border: `1px solid ${cosmic.borderActive}`,
-            borderRadius: '12px',
-            padding: '22px',
-            marginBottom: '28px',
-            boxShadow: '0 16px 44px oklch(0.02 0.01 260 / 0.45), 0 0 28px oklch(0.74 0.135 82 / 0.08)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
-              <div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.14em', color: cosmic.gold, textTransform: 'uppercase', marginBottom: '6px' }}>
-                  ✦ 새 질문
-                </p>
-                <p style={{ fontSize: '0.95rem', color: cosmic.textSoft, lineHeight: 1.6 }}>
-                  지금 가장 궁금한 한 가지를 적어주세요.
-                </p>
-              </div>
-              <button
-                onClick={() => setQuestionPanelOpen(false)}
-                aria-label="질문 입력 닫기"
-                style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '6px',
-                  background: 'transparent',
-                  border: '1px solid oklch(0.74 0.135 82 / 0.18)',
-                  color: cosmic.textMuted,
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch', flexWrap: 'wrap' }}>
-              <input
-                value={questionDraft}
-                onChange={event => setQuestionDraft(event.target.value)}
-                onKeyDown={event => {
-                  if (event.key === 'Enter') handleSubmitNewReading();
-                }}
-                autoFocus
-                placeholder="예: 이번 주 안에 계획한 일을 잘 마무리할 수 있을까?"
-                style={{
-                  flex: '1 1 260px',
-                  minHeight: '46px',
-                  padding: '0 16px',
-                  background: 'oklch(0.09 0.028 262 / 0.9)',
-                  border: `1px solid ${cosmic.border}`,
-                  borderRadius: '8px',
-                  color: cosmic.text,
-                  fontFamily: 'Crimson Text, serif',
-                  fontSize: '1rem',
-                  outline: 'none',
-                }}
-              />
-              <button
-                onClick={handleSubmitNewReading}
-                disabled={!questionDraft.trim()}
-                style={{
-                  flex: '0 0 auto',
-                  minHeight: '46px',
-                  padding: '0 20px',
-                  background: questionDraft.trim()
-                    ? 'linear-gradient(135deg, oklch(0.74 0.135 82), oklch(0.65 0.15 75))'
-                    : cosmic.panelSoft,
-                  border: questionDraft.trim() ? 'none' : `1px solid ${cosmic.border}`,
-                  borderRadius: '8px',
-                  color: questionDraft.trim() ? 'oklch(0.08 0.035 285)' : cosmic.textMuted,
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: '0.76rem',
-                  letterSpacing: '0.1em',
-                  cursor: questionDraft.trim() ? 'pointer' : 'not-allowed',
-                  boxShadow: questionDraft.trim() ? '0 4px 16px oklch(0.74 0.135 82 / 0.25)' : 'none',
-                }}
-              >
-                카드 선택하기
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '40px' }}>
@@ -416,7 +333,7 @@ export function DashboardPage() {
               아직 리딩 기록이 없습니다
             </p>
             <button
-              onClick={handleStartNewReading}
+              onClick={() => navigate('/reading')}
               style={{ marginTop: '20px', padding: '12px 28px', background: 'oklch(0.22 0.075 290)', border: '1px solid oklch(0.74 0.135 82 / 0.3)', borderRadius: '8px', color: 'oklch(0.74 0.135 82)', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', letterSpacing: '0.1em', cursor: 'pointer' }}
             >
               첫 리딩 시작하기
@@ -587,7 +504,16 @@ function ReadingDetail({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <div>
+          <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '0.1em', color: cosmic.gold, marginBottom: '6px', textTransform: 'uppercase' }}>
+            ✦ 이전 리딩 기록
+          </p>
+          <p style={{ fontSize: '0.95rem', color: cosmic.textSoft, lineHeight: 1.6 }}>
+            더보기를 눌러 펼친 기록입니다. 필요하면 같은 질문과 카드로 AI 분석을 다시 요청할 수 있습니다.
+          </p>
+        </div>
+
         <button
           onClick={onReanalyze}
           disabled={isAnalyzing}
