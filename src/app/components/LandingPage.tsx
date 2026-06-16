@@ -63,7 +63,7 @@ export function LandingPage() {
           {/* Question input */}
           <div style={{ maxWidth: '540px', margin: '0 auto' }}>
             <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.15em', color: 'oklch(0.74 0.135 82)', marginBottom: '12px', textTransform: 'uppercase' }}>
-              당신의 질문을 입력하세요
+              풀어보고 싶은 질문을 입력하세요
             </p>
             <div style={{ position: 'relative' }}>
               <input
@@ -116,7 +116,7 @@ export function LandingPage() {
                 boxShadow: inputQuestion.trim() ? '0 4px 30px oklch(0.74 0.135 82 / 0.4)' : 'none',
               }}
             >
-              ✦ &nbsp; 오늘의 타로 시작하기 &nbsp; ✦
+              ✦ &nbsp; 타로 시작하기 &nbsp; ✦
             </button>
           </div>
         </div>
@@ -205,6 +205,9 @@ export function LandingPage() {
       <footer style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '40px 24px', borderTop: '1px solid oklch(0.74 0.135 82 / 0.1)' }}>
         <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '0.15em', color: 'oklch(0.45 0.015 82)' }}>
           ✦ ARCANA — 별이 전하는 이야기 ✦
+        </p>
+        <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '0.15em', color: 'oklch(0.45 0.015 82)' }}>
+          ✦ 그녀는 나의 마음을 알까나?_Developer-Chan ✦
         </p>
       </footer>
     </div>
