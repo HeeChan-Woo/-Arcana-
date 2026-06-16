@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 const PROFILE_AVATAR = '🧙';
 
 export function Navigation() {
-  const { isLoggedIn, user, logout, readings } = useTarot();
+  const { isLoggedIn, user, logout, readings, startNewReading } = useTarot();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -30,6 +30,13 @@ export function Navigation() {
     navigate('/');
   };
 
+  const handleStartNewReading = () => {
+    startNewReading();
+    setProfileOpen(false);
+    setMobileOpen(false);
+    navigate('/');
+  };
+
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50"
@@ -49,7 +56,7 @@ export function Navigation() {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '28px' }}>
-          <NavLink to="/reading" active={isActive('/reading')}>타로 리딩</NavLink>
+          <NavButton active={isActive('/') || isActive('/reading')} onClick={handleStartNewReading}>타로 리딩</NavButton>
           {isLoggedIn && <NavLink to="/dashboard" active={isActive('/dashboard')}>내 기록</NavLink>}
 
           {isLoggedIn && user ? (
@@ -153,12 +160,12 @@ export function Navigation() {
 
                   {/* Menu items */}
                   {[
-                    { icon: '☽', label: '내 기록 보기', to: '/dashboard' },
-                    { icon: '✦', label: '새 리딩 시작', to: '/reading' },
+                    { icon: '☽', label: '내 기록 보기', onClick: () => { navigate('/dashboard'); setProfileOpen(false); } },
+                    { icon: '✦', label: '새 리딩 시작', onClick: handleStartNewReading },
                   ].map(item => (
                     <button
-                      key={item.to}
-                      onClick={() => { navigate(item.to); setProfileOpen(false); }}
+                      key={item.label}
+                      onClick={item.onClick}
                       style={{
                         width: '100%', padding: '11px 18px',
                         background: 'transparent',
@@ -236,7 +243,7 @@ export function Navigation() {
                 </div>
               </div>
             )}
-            <MobileNavItem to="/reading" onClick={() => setMobileOpen(false)}>타로 리딩</MobileNavItem>
+            <MobileNavButton onClick={handleStartNewReading}>타로 리딩</MobileNavButton>
             {isLoggedIn && <MobileNavItem to="/dashboard" onClick={() => setMobileOpen(false)}>내 기록</MobileNavItem>}
             {isLoggedIn ? (
               <button onClick={() => { handleLogout(); setMobileOpen(false); }} style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', letterSpacing: '0.06em', color: 'oklch(0.65 0.18 27)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '10px 0' }}>
@@ -264,6 +271,28 @@ function NavLink({ to, active, children }: { to: string; active: boolean; childr
   );
 }
 
+function NavButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        fontFamily: 'Cinzel, serif',
+        fontSize: '0.75rem',
+        letterSpacing: '0.1em',
+        color: active ? 'oklch(0.74 0.135 82)' : 'oklch(0.68 0.016 82)',
+        textTransform: 'uppercase',
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        transition: 'color 0.2s',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function MobileNavItem({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <Link to={to} onClick={onClick} style={{
@@ -272,5 +301,27 @@ function MobileNavItem({ to, onClick, children }: { to: string; onClick: () => v
     }}>
       {children}
     </Link>
+  );
+}
+
+function MobileNavButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        fontFamily: 'Cinzel, serif',
+        fontSize: '0.85rem',
+        letterSpacing: '0.08em',
+        color: 'oklch(0.74 0.135 82)',
+        background: 'transparent',
+        border: 'none',
+        display: 'block',
+        padding: '10px 0',
+        textAlign: 'left',
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
   );
 }

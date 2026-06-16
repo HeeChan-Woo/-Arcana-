@@ -89,7 +89,7 @@ function getAuthErrorMessage(error: unknown): string {
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { isLoggedIn, user, login, signup, logout, readings, deleteReading, reanalyzeReading } = useTarot();
+  const { isLoggedIn, user, login, signup, logout, readings, deleteReading, reanalyzeReading, startNewReading } = useTarot();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -127,6 +127,11 @@ export function DashboardPage() {
       authSubmittingRef.current = false;
       setLoading(false);
     }
+  };
+
+  const handleStartNewReading = () => {
+    startNewReading();
+    navigate('/');
   };
 
   const enriched = readings.map(enrichReading);
@@ -271,7 +276,7 @@ export function DashboardPage() {
               </p>
             </div>
             <button
-              onClick={() => navigate('/reading')}
+              onClick={handleStartNewReading}
               style={{
                 padding: '12px 24px',
                 background: 'linear-gradient(135deg, oklch(0.74 0.135 82), oklch(0.65 0.15 75))',
@@ -315,7 +320,7 @@ export function DashboardPage() {
               아직 리딩 기록이 없습니다
             </p>
             <button
-              onClick={() => navigate('/reading')}
+              onClick={handleStartNewReading}
               style={{ marginTop: '20px', padding: '12px 28px', background: 'oklch(0.22 0.075 290)', border: '1px solid oklch(0.74 0.135 82 / 0.3)', borderRadius: '8px', color: 'oklch(0.74 0.135 82)', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', letterSpacing: '0.1em', cursor: 'pointer' }}
             >
               첫 리딩 시작하기

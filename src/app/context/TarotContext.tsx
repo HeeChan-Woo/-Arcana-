@@ -31,6 +31,7 @@ interface TarotContextType {
   setQuestion: (q: string) => void;
   selectedCards: TarotCard[];
   setSelectedCards: (cards: TarotCard[]) => void;
+  startNewReading: () => void;
   readings: Reading[];
   addReading: (cards: TarotCard[]) => Promise<Reading>;
   reanalyzeReading: (reading: Reading) => Promise<Reading>;
@@ -204,6 +205,13 @@ export function TarotProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const startNewReading = () => {
+    setQuestion('');
+    setSelectedCards([]);
+    setAiError(null);
+    setIsLoading(false);
+  };
+
   const addReading = async (cards: TarotCard[]): Promise<Reading> => {
     setIsLoading(true);
     setAiError(null);
@@ -217,20 +225,26 @@ export function TarotProvider({ children }: { children: ReactNode }) {
       interpretationSource: 'fallback',
     };
 
-    const pendingReading = user
-      ? await saveReading(user.id, question, cards, fallbackReading.interpretation, 'fallback')
-      : fallbackReading;
-
     setReadings(prev => {
-      const updated = [pendingReading, ...prev];
+      const updated = [fallbackReading, ...prev];
       if (!user) writeLocalReadings(updated);
       return updated;
     });
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+    let pendingReading = fallbackReading;
 
     try {
+      if (user) {
+        try {
+          pendingReading = await saveReading(user.id, question, cards, fallbackReading.interpretation, 'fallback');
+          setReadings(prev => prev.map(item => item.id === fallbackReading.id ? pendingReading : item));
+        } catch (error) {
+          console.error('Failed to save fallback reading before AI analysis.', error);
+        }
+      }
+
       const interpretation = await fetchTarotFromAI({
         cards,
         question,
@@ -244,12 +258,14 @@ export function TarotProvider({ children }: { children: ReactNode }) {
         interpretationSource: interpretation === fallbackReading.interpretation ? 'fallback' : 'ai',
       };
 
-      const savedReading = user
+      const savedReading = user && pendingReading.id !== fallbackReading.id
         ? await updateReadingInterpretation(reading.id, interpretation, reading.interpretationSource ?? 'fallback')
         : reading;
 
       setReadings(prev => {
-        const updated = prev.map(item => item.id === savedReading.id ? savedReading : item);
+        const updated = prev.map(item =>
+          item.id === pendingReading.id || item.id === fallbackReading.id ? savedReading : item
+        );
         if (!user) writeLocalReadings(updated);
         return updated;
       });
@@ -398,6 +414,7 @@ export function TarotProvider({ children }: { children: ReactNode }) {
     <TarotContext.Provider value={{
       question, setQuestion,
       selectedCards, setSelectedCards,
+      startNewReading,
       readings, addReading, reanalyzeReading, deleteReading,
       isLoading, aiError,
       isLoggedIn, user,

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { StarField } from './StarField';
 import { Navigation } from './Navigation';
 import { useTarot } from '../context/TarotContext';
 import { CARD_POSITIONS } from '../data/tarotCards';
-import { parseTarotAISections, TarotAISections } from '../services/tarotAI';
+import { createFallbackTarotInterpretation, parseTarotAISections, TarotAISections } from '../services/tarotAI';
 
 const FLIP_DELAYS = [400, 900, 1400];
 
@@ -47,10 +47,6 @@ function SparkleLoader() {
         </div>
       </div>
       <style>{`
-        @keyframes sparkle-orbit {
-          0%, 100% { opacity: 0.3; transform: rotate(var(--deg)) translateY(-22px) translate(-50%, -50%) scale(0.7); }
-          50% { opacity: 1; transform: rotate(var(--deg)) translateY(-22px) translate(-50%, -50%) scale(1.2); }
-        }
         @keyframes sparkle-pulse {
           0%, 100% { opacity: 0.5; transform: scale(0.85); color: oklch(0.74 0.135 82); }
           50% { opacity: 1; transform: scale(1.15); color: oklch(0.52 0.19 293); }
@@ -172,6 +168,7 @@ function AISection({
       padding: '36px',
       marginBottom: '32px',
       overflow: 'hidden',
+      isolation: 'isolate',
     }}>
       {/* Glowing border */}
       <div style={{
@@ -180,12 +177,14 @@ function AISection({
         background: 'linear-gradient(oklch(0.10 0.05 290), oklch(0.10 0.05 290)) padding-box, linear-gradient(135deg, oklch(0.74 0.135 82 / 0.6), oklch(0.52 0.19 293 / 0.4), oklch(0.74 0.135 82 / 0.6)) border-box',
         animation: phase === 'done' ? 'none' : 'glow-border 2s ease-in-out infinite',
         pointerEvents: 'none',
+        zIndex: 0,
       }} />
       {/* Ambient glow */}
       <div style={{
         position: 'absolute', top: '-30px', right: '-30px', width: '200px', height: '200px',
         background: 'radial-gradient(circle, oklch(0.52 0.19 293 / 0.15) 0%, transparent 70%)',
         pointerEvents: 'none',
+        zIndex: 0,
       }} />
       <style>{`
         @keyframes glow-border {
@@ -195,7 +194,7 @@ function AISection({
       `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
         <div style={{
           width: '36px', height: '36px', borderRadius: '50%',
           background: 'linear-gradient(135deg, oklch(0.52 0.19 293), oklch(0.35 0.14 292))',
@@ -232,12 +231,18 @@ function AISection({
         )}
       </div>
 
-      {(phase === 'loading' || isLoading) && !interpretation && <SparkleLoader />}
+      {(phase === 'loading' || isLoading) && !interpretation && (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <SparkleLoader />
+        </div>
+      )}
 
       {isLoading && interpretation && <AIAnalyzingBanner />}
 
       {error && !isLoading && (
         <div style={{
+          position: 'relative',
+          zIndex: 1,
           background: 'oklch(0.17 0.045 287 / 0.65)',
           border: '1px solid oklch(0.74 0.135 82 / 0.22)',
           borderRadius: '8px',
@@ -254,7 +259,7 @@ function AISection({
       )}
 
       {(phase === 'typing' || phase === 'done') && interpretation && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Direct Answer */}
           {visibleSections >= 1 && (
             <InterpSection
@@ -320,7 +325,7 @@ function InterpSection({ icon, label, labelKo, content, delay, accentColor }: {
 
 export function ReadingResultPage() {
   const navigate = useNavigate();
-  const { selectedCards, question, readings, isLoggedIn, isLoading, aiError } = useTarot();
+  const { selectedCards, question, readings, isLoggedIn, isLoading, aiError, startNewReading } = useTarot();
   const [flipped, setFlipped] = useState<boolean[]>([false, false, false]);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
@@ -330,6 +335,11 @@ export function ReadingResultPage() {
     reading.cards.length === selectedCards.length &&
     reading.cards.every((card, index) => card.id === selectedCards[index]?.id)
   );
+  const fallbackInterpretation = useMemo(() => {
+    if (!question || selectedCards.length === 0) return undefined;
+    return createFallbackTarotInterpretation(selectedCards, question);
+  }, [question, selectedCards]);
+  const interpretationText = currentReading?.interpretation ?? fallbackInterpretation;
 
   useEffect(() => {
     if (!selectedCards.length) { navigate('/'); return; }
@@ -340,7 +350,16 @@ export function ReadingResultPage() {
 
   const handleSave = () => {
     if (!isLoggedIn) { navigate('/dashboard'); return; }
+    if (saved) return;
     setSaved(true);
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 700);
+  };
+
+  const handleStartOver = () => {
+    startNewReading();
+    navigate('/');
   };
 
   const handleShare = () => {
@@ -465,7 +484,7 @@ export function ReadingResultPage() {
 
         {/* AI Interpretation */}
         <AISection
-          interpretationText={currentReading?.interpretation}
+          interpretationText={interpretationText}
           isAIAnswer={currentReading?.interpretationSource === 'ai'}
           isLoading={isLoading}
           error={aiError}
@@ -529,7 +548,7 @@ export function ReadingResultPage() {
             {copied ? '✓ 복사됨' : '↑ 공유'}
           </button>
           <button
-            onClick={() => navigate('/')}
+            onClick={handleStartOver}
             style={{
               flex: 1, padding: '14px',
               background: 'oklch(0.17 0.045 287)',
