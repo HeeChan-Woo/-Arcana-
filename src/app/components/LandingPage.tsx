@@ -135,7 +135,7 @@ export function LandingPage() {
       {/* How it works */}
       <section style={{ position: 'relative', zIndex: 1, maxWidth: '900px', margin: '0 auto', padding: '80px 24px' }}>
         <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.5rem', letterSpacing: '0.12em', color: 'oklch(0.74 0.135 82)', textAlign: 'center', marginBottom: '56px', textTransform: 'uppercase' }}>
-          ✦ &nbsp; 어떻게 작동하나요 &nbsp; ✦
+          ✦ &nbsp; 사용방법 &nbsp; ✦
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
           {[
