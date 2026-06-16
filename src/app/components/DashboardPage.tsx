@@ -89,7 +89,7 @@ function getAuthErrorMessage(error: unknown): string {
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { isLoggedIn, user, login, signup, logout, readings, deleteReading, reanalyzeReading, startNewReading } = useTarot();
+  const { isLoggedIn, user, login, signup, logout, readings, deleteReading, reanalyzeReading, startNewReading, setQuestion } = useTarot();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -102,6 +102,8 @@ export function DashboardPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reanalyzingId, setReanalyzingId] = useState<string | null>(null);
   const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
+  const [questionPanelOpen, setQuestionPanelOpen] = useState(false);
+  const [questionDraft, setQuestionDraft] = useState('');
 
   const handleAuth = async () => {
     if (loading || authSubmittingRef.current) return;
@@ -131,7 +133,17 @@ export function DashboardPage() {
 
   const handleStartNewReading = () => {
     startNewReading();
-    navigate('/');
+    setQuestionDraft('');
+    setQuestionPanelOpen(true);
+  };
+
+  const handleSubmitNewReading = () => {
+    const nextQuestion = questionDraft.trim();
+    if (!nextQuestion) return;
+
+    startNewReading();
+    setQuestion(nextQuestion);
+    navigate('/reading');
   };
 
   const enriched = readings.map(enrichReading);
@@ -291,6 +303,90 @@ export function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {questionPanelOpen && (
+          <div style={{
+            background: cosmic.panel,
+            border: `1px solid ${cosmic.borderActive}`,
+            borderRadius: '12px',
+            padding: '22px',
+            marginBottom: '28px',
+            boxShadow: '0 16px 44px oklch(0.02 0.01 260 / 0.45), 0 0 28px oklch(0.74 0.135 82 / 0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
+              <div>
+                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.14em', color: cosmic.gold, textTransform: 'uppercase', marginBottom: '6px' }}>
+                  ✦ 새 질문
+                </p>
+                <p style={{ fontSize: '0.95rem', color: cosmic.textSoft, lineHeight: 1.6 }}>
+                  지금 가장 궁금한 한 가지를 적어주세요.
+                </p>
+              </div>
+              <button
+                onClick={() => setQuestionPanelOpen(false)}
+                aria-label="질문 입력 닫기"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  border: '1px solid oklch(0.74 0.135 82 / 0.18)',
+                  color: cosmic.textMuted,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch', flexWrap: 'wrap' }}>
+              <input
+                value={questionDraft}
+                onChange={event => setQuestionDraft(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') handleSubmitNewReading();
+                }}
+                autoFocus
+                placeholder="예: 이번 주 안에 계획한 일을 잘 마무리할 수 있을까?"
+                style={{
+                  flex: '1 1 260px',
+                  minHeight: '46px',
+                  padding: '0 16px',
+                  background: 'oklch(0.09 0.028 262 / 0.9)',
+                  border: `1px solid ${cosmic.border}`,
+                  borderRadius: '8px',
+                  color: cosmic.text,
+                  fontFamily: 'Crimson Text, serif',
+                  fontSize: '1rem',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={handleSubmitNewReading}
+                disabled={!questionDraft.trim()}
+                style={{
+                  flex: '0 0 auto',
+                  minHeight: '46px',
+                  padding: '0 20px',
+                  background: questionDraft.trim()
+                    ? 'linear-gradient(135deg, oklch(0.74 0.135 82), oklch(0.65 0.15 75))'
+                    : cosmic.panelSoft,
+                  border: questionDraft.trim() ? 'none' : `1px solid ${cosmic.border}`,
+                  borderRadius: '8px',
+                  color: questionDraft.trim() ? 'oklch(0.08 0.035 285)' : cosmic.textMuted,
+                  fontFamily: 'Cinzel, serif',
+                  fontSize: '0.76rem',
+                  letterSpacing: '0.1em',
+                  cursor: questionDraft.trim() ? 'pointer' : 'not-allowed',
+                  boxShadow: questionDraft.trim() ? '0 4px 16px oklch(0.74 0.135 82 / 0.25)' : 'none',
+                }}
+              >
+                카드 선택하기
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '40px' }}>
